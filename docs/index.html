@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mumbai &amp; MMR Civic Spend Monitor</title>
+<meta name="description" content="Prototype tools to monitor public spending in Mumbai and the Mumbai Metropolitan Region: tender analytics and a 3D digital twin.">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <strong>Mumbai &amp; MMR Civic Spend Monitor</strong>
+  <nav><a href="index.html" aria-current="page">Home</a><a href="analytics.html">Analytics</a><a href="twin/">3D Digital Twin</a><a href="https://github.com/akashtalole/CIL-MUM-Civic-Budget-Accountability">GitHub</a></nav>
+</div></header>
+<main class="wrap">
+  <h1>Where does the money go?</h1>
+  <p class="lead">Prototype tools built for Claude Impact Lab Mumbai (Civic Budget &amp; Accountability). They help citizens see public spending in Mumbai and the wider Mumbai Metropolitan Region, track whether works are delivered, and ask the right questions of the right people.</p>
+  <div class="banner">This is a prototype. Charts marked <b>real snapshot</b> use public tender counts. Charts marked <b>synthetic</b> use generated sample data to demonstrate the method and say nothing about real tenders or companies.</div>
+
+  <div class="grid cols-3">
+    <a class="card" href="analytics.html" style="text-decoration:none;color:inherit"><h3>Expense analytics</h3><p>Tender volume across Mumbai and MMR bodies, plus indicators: competition, award vs estimate, extensions, contractor concentration and monsoon timing.</p><span class="tag real">real snapshot</span> <span class="tag syn">synthetic indicators</span></a>
+    <a class="card" href="twin/" style="text-decoration:none;color:inherit"><h3>3D digital twin</h3><p>An interactive Three.js map: projects as bars (height = sanctioned amount, colour = status), hospitals, the Mithi river, flood hotspots, and MMR cities sized by tender count.</p><span class="tag syn">demo projects</span></a>
+    <a class="card" href="https://github.com/akashtalole/CIL-MUM-Civic-Budget-Accountability/blob/main/docs/EXPENSE_MONITORING.md" style="text-decoration:none;color:inherit"><h3>Method and data sources</h3><p>14 tender-monitoring ideas, risk-indicator definitions, the extraction schema, and the sanctioned ways to get data.</p></a>
+  </div>
+
+  <h2>Principles</h2>
+  <div class="grid cols-2">
+    <div class="card"><h3>Indicators, not accusations</h3><p>A flag means "worth a closer look" and always shows the numbers behind it. Single-bidder tenders and extensions often have innocent explanations.</p></div>
+    <div class="card"><h3>Public data, sanctioned access</h3><p>Sources are public portals, official exports and RTI replies. Captchas and access controls are not bypassed.</p></div>
+    <div class="card"><h3>Cite and date everything</h3><p>Each record should link to its source and show when it was last updated.</p></div>
+    <div class="card"><h3>Independent</h3><p>Not an official BMC, MMRDA or Government of Maharashtra service.</p></div>
+  </div>
+</main>
+<footer><div class="wrap">Built with Claude for Claude Impact Lab Mumbai. Source: <a href="https://github.com/akashtalole/CIL-MUM-Civic-Budget-Accountability">GitHub</a>.</div></footer>
+</body>
+</html>

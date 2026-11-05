@@ -1,0 +1,31 @@
+{
+  "source": "https://mahatenders.gov.in/nicgep/app?page=FrontEndTendersByOrganisation&service=page",
+  "snapshot_date": "2026-11-05",
+  "synthetic": false,
+  "note": "Tender counts as displayed on the public organisation list on the snapshot date (active tenders). Organisations selected as Mumbai/MMR-relevant. Counts change daily.",
+  "organisations": [
+    {"name":"Municipal Corporation of Greater Mumbai","short":"MCGM","region":"Mumbai","tenders":334},
+    {"name":"Navi Mumbai Municipal Corporation","short":"NMMC","region":"MMR","tenders":196},
+    {"name":"Thane Municipal Corporation Thane","short":"TMC","region":"MMR","tenders":72},
+    {"name":"Brihanmumbai Electric Supply and Transport Undertaking","short":"BEST","region":"Mumbai","tenders":31},
+    {"name":"Kalyan Dombivli Municipal Corporation","short":"KDMC","region":"MMR","tenders":30},
+    {"name":"Mira Bhaindar Municipal Corporation","short":"MBMC","region":"MMR","tenders":27},
+    {"name":"Maharashtra Medical Goods Procurement Authority Mumbai","short":"MMGPA","region":"Mumbai","tenders":24},
+    {"name":"Panvel Municipal Corporation","short":"Panvel MC","region":"MMR","tenders":23},
+    {"name":"Director Medical Education and Research Department Mumbai","short":"DMER","region":"Mumbai","tenders":20},
+    {"name":"Commissionerate of Fisheries, Mumbai","short":"Fisheries","region":"Mumbai","tenders":19},
+    {"name":"Director General Of Police, Mumbai","short":"DG Police","region":"Mumbai","tenders":16},
+    {"name":"Mumbai Metropolitan Region Development Authority","short":"MMRDA","region":"MMR","tenders":15},
+    {"name":"Maharashtra Metro Rail Corporation Limited","short":"MahaMetro","region":"MMR","tenders":15},
+    {"name":"Bhiwandi Nizampur City Municipal Corporation","short":"BNCMC","region":"MMR","tenders":14},
+    {"name":"Directorate of Health Services, Mumbai","short":"DHS","region":"Mumbai","tenders":13},
+    {"name":"Maharashtra Airport Development Co. Ltd.","short":"MADC","region":"MMR","tenders":11},
+    {"name":"CE-Water Resources Dept. Konkan Region Mumbai","short":"WRD Konkan","region":"MMR","tenders":10},
+    {"name":"Maharashtra Maritime Board Mumbai","short":"MMB","region":"Mumbai","tenders":9},
+    {"name":"Member Secretary(WSSD),Mumbai","short":"WSSD","region":"Mumbai","tenders":8},
+    {"name":"Vasai Virar City Municipal Corporation","short":"VVMC","region":"MMR","tenders":7},
+    {"name":"Ulhasnagar Municipal Corporation","short":"UMC","region":"MMR","tenders":4},
+    {"name":"COLLECTOR THANE","short":"Collector Thane","region":"MMR","tenders":5},
+    {"name":"COLLECTOR MUMBAI CITY","short":"Collector Mumbai","region":"Mumbai","tenders":2}
+  ]
+}

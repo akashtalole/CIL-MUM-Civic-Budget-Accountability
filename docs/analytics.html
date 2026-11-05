@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mumbai &amp; MMR Expense Analytics</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <strong>Mumbai &amp; MMR Civic Spend Monitor</strong>
+  <nav><a href="index.html">Home</a><a href="analytics.html" aria-current="page">Analytics</a><a href="twin/">3D Digital Twin</a><a href="https://github.com/akashtalole/CIL-MUM-Civic-Budget-Accountability">GitHub</a></nav>
+</div></header>
+
+<main class="wrap">
+  <h1>Expense analytics: Mumbai &amp; MMR</h1>
+  <p class="lead">Tender-based indicators for Mumbai and the wider Mumbai Metropolitan Region. Indicators point to tenders worth a closer look. They are not findings of wrongdoing.</p>
+
+  <section>
+    <h2>1. Live tendering volume <span class="tag real">real snapshot</span></h2>
+    <div class="banner real" id="realBanner">Loading snapshot…</div>
+    <div class="card"><p><span style="color:#4cc3ff">&#9632;</span> Mumbai city bodies &nbsp; <span style="color:#2ecc71">&#9632;</span> Wider MMR bodies. Hover a bar for the full name.</p><div class="chart" style="height:560px"><canvas id="cOrg"></canvas></div></div>
+  </section>
+
+  <section>
+    <h2>2. Tender indicators <span class="tag syn">synthetic demo data</span></h2>
+    <div class="banner"><b>Synthetic data.</b> Everything below is computed from generated sample tenders (<code>data/tenders.sample.json</code>) to demonstrate the method. Contractor names are placeholders. It does not describe any real tender or company. Real analysis needs verified data from official exports or RTI.</div>
+
+    <div class="controls">
+      <label>Organisation <select id="fOrg"></select></label>
+      <label>Category <select id="fCat"></select></label>
+      <label>Region <select id="fRegion"><option value="all">Mumbai + MMR</option><option value="Mumbai">Mumbai city only</option><option value="MMR">MMR (excl. Mumbai city)</option></select></label>
+    </div>
+
+    <div class="grid kpis" id="kpis"></div>
+
+    <div class="grid cols-2" style="margin-top:14px">
+      <div class="card"><h3>Estimated vs awarded value by month (₹ cr)</h3><div class="chart"><canvas id="cMonth"></canvas></div></div>
+      <div class="card"><h3>Award ÷ estimate (share of awarded tenders)</h3><p>Clusters just under 100% can indicate bids tracking the estimate.</p><div class="chart"><canvas id="cRatio"></canvas></div></div>
+      <div class="card"><h3>Competition: bidders per tender</h3><p>One bidder is not wrong on its own, but a high share merits review.</p><div class="chart"><canvas id="cBid"></canvas></div></div>
+      <div class="card"><h3>Contractor concentration (share of awarded value)</h3><p id="hhi"></p><div class="chart"><canvas id="cConc"></canvas></div></div>
+      <div class="card"><h3>Pre-monsoon timing: Roads &amp; Drains awards by month</h3><p>Awards after May leave little time before the monsoon.</p><div class="chart"><canvas id="cSeason"></canvas></div></div>
+      <div class="card"><h3>Deadline extensions per tender</h3><div class="chart"><canvas id="cExt"></canvas></div></div>
+    </div>
+
+    <h2>3. Organisation comparison</h2>
+    <div class="card scroll"><table id="tOrg"></table></div>
+
+    <h2>4. Tenders worth a closer look</h2>
+    <p class="lead">Rules applied: <b>single bidder</b>, <b>award within 97–100% of estimate</b>, <b>two or more extensions</b>. Tenders with more flags are listed first.</p>
+    <div class="card scroll"><table id="tFlag"></table></div>
+  </section>
+
+  <section>
+    <h2>Method</h2>
+    <div class="grid cols-2">
+      <div class="card"><h3>Indicators</h3><p>Single-bidder share, award/estimate ratio, extensions, contractor concentration (top shares and Herfindahl–Hirschman Index), monthly value and timing. Definitions and caveats are in <a href="https://github.com/akashtalole/CIL-MUM-Civic-Budget-Accountability/blob/main/docs/EXPENSE_MONITORING.md">EXPENSE_MONITORING.md</a>.</p></div>
+      <div class="card"><h3>Plugging in real data</h3><p>Replace <code>data/tenders.sample.json</code> with verified records using the same schema (<code>tender_id, organisation, org_short, city, category, estimated_cost_cr, awarded_value_cr, bidders[], awarded_to, published_on, extensions, status</code>) and set <code>"synthetic": false</code>. The banner and tags update automatically.</p></div>
+    </div>
+  </section>
+</main>
+<footer><div class="wrap">Independent civic-transparency prototype. Not an official BMC, MMRDA or Government of Maharashtra service.</div></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="assets/analytics.js"></script>
+</body>
+</html>
