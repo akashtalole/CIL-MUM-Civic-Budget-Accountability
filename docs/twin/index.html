@@ -16,6 +16,7 @@
   #hud .sub { color:var(--mute); font-size:12px; margin-bottom:8px; }
   #hud label { display:flex; align-items:center; gap:8px; padding:3px 0; cursor:pointer; }
   #hud .sw { width:10px; height:10px; border-radius:2px; display:inline-block; }
+  #hud button { background:#0b1220; color:var(--ink); border:1px solid #223055; border-radius:6px; padding:4px 8px; cursor:pointer; }
   #hud select { width:100%; margin-top:6px; background:#0b1220; color:var(--ink); border:1px solid #223055; border-radius:6px; padding:5px; }
   #hud .row { margin-top:8px; color:var(--mute); font-size:12px; }
   #info { top:12px; right:12px; width:310px; max-height:calc(100% - 24px); overflow:auto; display:none; }
@@ -56,7 +57,8 @@
     <option value="delayed">Delayed</option>
     <option value="flagged">Flagged for review</option>
   </select>
-  <div class="row">Bar height = sanctioned amount &middot; colour = status</div>
+  <div class="row"><button id="vMum">Mumbai view</button> <button id="vMmr">MMR view</button></div>
+  <div class="row">Project bars: height = sanctioned amount &middot; colour = status</div>
   <div class="row">
     <span class="sw" style="background:var(--ok)"></span> on track
     <span class="sw" style="background:var(--warn);margin-left:8px"></span> delayed
@@ -67,8 +69,8 @@
 <div id="info" class="panel"><span class="close" id="close">&#x2715;</span><div id="infobody"></div></div>
 
 <div id="foot" class="panel">
-  <b>Demo data.</b> Project figures are synthetic placeholders for illustration. Coastline and ward geometry are schematic approximations, not survey data.
-  Replace <code>data/projects.json</code> with real tender data (see docs/EXPENSE_MONITORING.md).
+  <b>Demo data.</b> Project figures are synthetic placeholders. MMR bars use a real tender-count snapshot. Coastline and ward geometry are schematic approximations, not survey data.
+  Replace <code>data/projects.json</code> with real tender data (see EXPENSE_MONITORING.md on GitHub).
 </div>
 
 <script type="module">
@@ -127,8 +129,8 @@ host.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0b1220);
-scene.fog = new THREE.Fog(0x0b1220, 70, 160);
-const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 400);
+scene.fog = new THREE.Fog(0x0b1220, 110, 260);
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 600);
 camera.position.set(14, 24, 30);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 0, -3); controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.49;
@@ -176,6 +178,24 @@ function label(text, pos) {
     m.position.copy(at(la, lo, LAND_Y + .2)); g.add(m);
     g.add(label(n, at(la, lo, LAND_Y + 1.2)));
   } addLayer('landmarks', 'Landmarks', '#ffffff', g); }
+
+// MMR cities: bar height = active tenders on the eProcurement list (real snapshot, 5 Nov 2026)
+{ const g = new THREE.Group();
+  const CITIES = [
+    ['Thane MC', 19.2183, 72.9781, 72], ['Navi Mumbai MC', 19.0771, 72.9980, 196], ['Kalyan-Dombivli MC', 19.2403, 73.1305, 30],
+    ['Mira-Bhayandar MC', 19.2952, 72.8544, 27], ['Vasai-Virar MC', 19.4259, 72.8225, 7], ['Panvel MC', 18.9894, 73.1175, 23],
+    ['Ulhasnagar MC', 19.2215, 73.1645, 4], ['Bhiwandi-Nizampur MC', 19.2813, 73.0483, 14]
+  ];
+  for (const [n, la, lo, cnt] of CITIES) {
+    const h = Math.max(.5, Math.sqrt(cnt) * .35);
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, .12, 24), new THREE.MeshStandardMaterial({ color:0x24385e }));
+    pad.position.copy(at(la, lo, .06)); g.add(pad);
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(.8, h, .8), new THREE.MeshStandardMaterial({ color:0x2ecc71, emissive:0x0b3a1f }));
+    bar.position.copy(at(la, lo, .12 + h / 2)); bar.userData = { tip:`${n}: ${cnt} active tenders (snapshot, 5 Nov 2026)`, kind:'mmr' };
+    g.add(bar); pickables.push(bar);
+    g.add(label(n, at(la, lo, .12 + h + 1)));
+  }
+  addLayer('mmr', 'MMR cities (tender count)', '#2ecc71', g); }
 
 // Hospitals
 { const g = new THREE.Group();
@@ -285,6 +305,10 @@ function showProject(p) {
 fetch('data/projects.json').then(r => r.ok ? r.json() : null).then(j => {
   if (Array.isArray(j) && j.length) { projects = j; buildProjects(document.getElementById('status').value); }
 }).catch(() => {});
+
+/* ---------- Camera presets ---------- */
+document.getElementById('vMum').onclick = () => { camera.position.set(14, 24, 30); controls.target.set(0, 0, -3); };
+document.getElementById('vMmr').onclick = () => { camera.position.set(12, 70, 55); controls.target.set(10, 0, -18); };
 
 /* ---------- Loop ---------- */
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });

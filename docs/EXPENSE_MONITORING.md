@@ -161,7 +161,7 @@ Each idea lists the signal, the data needed, and how Claude helps.
 
 ## 4. The 3D Digital Twin of Mumbai (Three.js)
 
-A working prototype lives in [`digital-twin/index.html`](../digital-twin/index.html).
+A working prototype lives in [`docs/twin/index.html`](twin/index.html).
 
 ### 4.1 What it shows
 
@@ -173,9 +173,9 @@ A working prototype lives in [`digital-twin/index.html`](../digital-twin/index.h
 ### 4.2 Run it
 
 ```bash
-cd digital-twin
+cd docs
 python3 -m http.server 8000
-# open http://localhost:8000
+# open http://localhost:8000 (site home), /analytics.html, /twin/
 ```
 
 It loads Three.js `0.160.0` from a CDN (import map), so it needs internet access and no build step.
@@ -188,7 +188,7 @@ It loads Three.js `0.160.0` from a CDN (import map), so it needs internet access
 
 ### 4.4 Plugging in real data
 
-The page loads an optional `digital-twin/data/projects.json`. If present and non-empty it replaces the demo data.
+The page loads an optional `docs/twin/data/projects.json`. If present and non-empty it replaces the demo data.
 
 ```json
 [
