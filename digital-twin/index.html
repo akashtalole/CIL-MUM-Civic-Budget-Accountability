@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mumbai Civic Digital Twin (prototype)</title>
+<style>
+  :root { --bg:#0b1220; --panel:#111a2e; --ink:#e6edf7; --mute:#8fa1bd; --ok:#2ecc71; --warn:#f5a623; --bad:#ff4d4f; --accent:#4cc3ff; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; overflow:hidden; }
+  #app { position:fixed; inset:0; }
+  canvas { display:block; }
+  .panel { position:absolute; background:rgba(17,26,46,.92); border:1px solid #223055; border-radius:10px; padding:12px 14px; backdrop-filter:blur(6px); }
+  #hud { top:12px; left:12px; width:270px; }
+  #hud h1 { font-size:15px; margin:0 0 2px; }
+  #hud .sub { color:var(--mute); font-size:12px; margin-bottom:8px; }
+  #hud label { display:flex; align-items:center; gap:8px; padding:3px 0; cursor:pointer; }
+  #hud .sw { width:10px; height:10px; border-radius:2px; display:inline-block; }
+  #hud select { width:100%; margin-top:6px; background:#0b1220; color:var(--ink); border:1px solid #223055; border-radius:6px; padding:5px; }
+  #hud .row { margin-top:8px; color:var(--mute); font-size:12px; }
+  #info { top:12px; right:12px; width:310px; max-height:calc(100% - 24px); overflow:auto; display:none; }
+  #info h2 { margin:0 0 4px; font-size:15px; }
+  #info .tag { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; font-weight:600; color:#0b1220; }
+  #info table { width:100%; border-collapse:collapse; margin-top:8px; }
+  #info td { padding:3px 0; border-bottom:1px solid #1d2a4a; vertical-align:top; }
+  #info td:first-child { color:var(--mute); width:48%; }
+  #info .bar { height:8px; background:#1d2a4a; border-radius:4px; overflow:hidden; margin-top:4px; }
+  #info .bar > i { display:block; height:100%; background:var(--accent); }
+  #info .flags { margin:8px 0 0; padding-left:18px; color:#ffd2d3; }
+  #info .close { position:absolute; top:8px; right:12px; cursor:pointer; color:var(--mute); }
+  #foot { bottom:12px; left:12px; right:12px; font-size:12px; color:var(--mute); padding:8px 12px; }
+  #foot b { color:var(--warn); }
+  #tip { position:absolute; pointer-events:none; background:#000c; color:#fff; padding:3px 8px; border-radius:6px; font-size:12px; display:none; white-space:nowrap; }
+  #err { position:absolute; inset:0; display:none; align-items:center; justify-content:center; text-align:center; padding:24px; color:var(--mute); }
+  @media (max-width:640px){ #hud{width:auto;right:12px} #info{top:auto;bottom:56px;left:12px;right:12px;width:auto;max-height:45%} }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="app"></div>
+<div id="tip"></div>
+<div id="err">Could not load Three.js from the CDN. Check your network connection and reload.</div>
+
+<div id="hud" class="panel">
+  <h1>Mumbai Civic Digital Twin</h1>
+  <div class="sub">Prototype. Click a marker for details.</div>
+  <div id="layers"></div>
+  <select id="status">
+    <option value="all">All project statuses</option>
+    <option value="on-track">On track</option>
+    <option value="delayed">Delayed</option>
+    <option value="flagged">Flagged for review</option>
+  </select>
+  <div class="row">Bar height = sanctioned amount &middot; colour = status</div>
+  <div class="row">
+    <span class="sw" style="background:var(--ok)"></span> on track
+    <span class="sw" style="background:var(--warn);margin-left:8px"></span> delayed
+    <span class="sw" style="background:var(--bad);margin-left:8px"></span> flagged
+  </div>
+</div>
+
+<div id="info" class="panel"><span class="close" id="close">&#x2715;</span><div id="infobody"></div></div>
+
+<div id="foot" class="panel">
+  <b>Demo data.</b> Project figures are synthetic placeholders for illustration. Coastline and ward geometry are schematic approximations, not survey data.
+  Replace <code>data/projects.json</code> with real tender data (see docs/EXPENSE_MONITORING.md).
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ---------- Projection: lat/lon -> scene units (1 unit = 1 km) ---------- */
+const LAT0 = 19.07, LON0 = 72.87;
+const KX = 111.32 * Math.cos(LAT0 * Math.PI / 180), KY = 110.57;
+const proj = (lat, lon) => new THREE.Vector2((lon - LON0) * KX, -(lat - LAT0) * KY);
+
+/* ---------- Schematic outline of Mumbai (approximate) ---------- */
+const OUTLINE = [
+  [18.905,72.808],[18.925,72.820],[18.955,72.795],[19.000,72.810],[19.040,72.838],
+  [19.055,72.820],[19.100,72.825],[19.135,72.810],[19.185,72.790],[19.240,72.800],
+  [19.275,72.865],[19.250,72.910],[19.175,72.960],[19.145,72.950],[19.105,72.935],
+  [19.050,72.925],[19.000,72.915],[19.000,72.860],[18.965,72.845],[18.915,72.830]
+];
+
+/* ---------- Reference layers (real, well-known places; coordinates approximate) ---------- */
+const HOSPITALS = [
+  ['KEM Hospital', 19.0023, 72.8417], ['Sion Hospital', 19.0360, 72.8610],
+  ['Nair Hospital', 18.9694, 72.8197], ['Cooper Hospital', 19.1075, 72.8365],
+  ['JJ Hospital', 18.9633, 72.8332]
+];
+const FLOOD_SPOTS = [
+  ['Hindmata', 18.9860, 72.8410], ['Milan Subway', 19.0800, 72.8420],
+  ['King’s Circle', 19.0290, 72.8570], ['Andheri Subway', 19.1190, 72.8470],
+  ['Sion', 19.0390, 72.8640]
+];
+const MITHI = [[19.1260,72.9050],[19.1000,72.8850],[19.0640,72.8650],[19.0500,72.8520],[19.0420,72.8400]];
+const LANDMARKS = [
+  ['CSMT', 18.9398, 72.8355], ['Gateway of India', 18.9220, 72.8347], ['Sea Link', 19.0360, 72.8156],
+  ['BKC', 19.0680, 72.8700], ['Airport', 19.0896, 72.8656], ['Dharavi', 19.0428, 72.8530]
+];
+
+/* ---------- Demo project data (synthetic). Replace via data/projects.json ---------- */
+const DEMO_PROJECTS = [
+  { id:'D-001', title:'Stormwater drain desilting, Hindmata', dept:'SWD', ward:'F/North', lat:18.9860, lon:72.8410, sanctioned_cr:12.4, paid_cr:7.1, status:'delayed', due:'2026-05-31', flags:['Deadline extended twice'] },
+  { id:'D-002', title:'Concrete road resurfacing, LBS Marg', dept:'Roads', ward:'L', lat:19.0850, lon:72.8890, sanctioned_cr:48.0, paid_cr:36.0, status:'on-track', due:'2026-12-31', flags:[] },
+  { id:'D-003', title:'Mithi river bank widening', dept:'SWD', ward:'L', lat:19.0640, lon:72.8650, sanctioned_cr:96.5, paid_cr:70.2, status:'flagged', due:'2026-03-31', flags:['Single bidder','Cost up 22% since award'] },
+  { id:'D-004', title:'Hospital ward refurbishment, KEM', dept:'Health', ward:'F/South', lat:19.0023, lon:72.8417, sanctioned_cr:27.8, paid_cr:11.0, status:'on-track', due:'2027-02-28', flags:[] },
+  { id:'D-005', title:'School building repair, Dharavi', dept:'Education', ward:'G/North', lat:19.0428, lon:72.8530, sanctioned_cr:8.9, paid_cr:8.9, status:'on-track', due:'2026-06-30', flags:[] },
+  { id:'D-006', title:'Pumping station upgrade, Milan Subway', dept:'SWD', ward:'K/East', lat:19.0800, lon:72.8420, sanctioned_cr:35.2, paid_cr:30.9, status:'flagged', due:'2026-04-30', flags:['Bid just below estimate','Repeat contractor'] },
+  { id:'D-007', title:'Footpath and junction improvement, Colaba', dept:'Roads', ward:'A', lat:18.9150, lon:72.8250, sanctioned_cr:15.6, paid_cr:3.2, status:'delayed', due:'2026-09-30', flags:[] },
+  { id:'D-008', title:'Dispensary upgrade, Andheri', dept:'Health', ward:'K/West', lat:19.1190, lon:72.8470, sanctioned_cr:6.4, paid_cr:5.9, status:'on-track', due:'2026-08-31', flags:[] }
+];
+const STATUS_COLOR = { 'on-track':0x2ecc71, 'delayed':0xf5a623, 'flagged':0xff4d4f };
+
+/* ---------- Scene ---------- */
+const host = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+host.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b1220);
+scene.fog = new THREE.Fog(0x0b1220, 70, 160);
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 400);
+camera.position.set(14, 24, 30);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, -3); controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.49;
+controls.minDistance = 6; controls.maxDistance = 120;
+
+scene.add(new THREE.HemisphereLight(0xbcd7ff, 0x0b1220, 0.9));
+const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(30, 50, 20); scene.add(sun);
+
+// Sea
+const sea = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color:0x0e2a4a, roughness:.9 }));
+sea.rotation.x = -Math.PI / 2; sea.position.y = -0.05; scene.add(sea);
+const grid = new THREE.GridHelper(120, 60, 0x1d2a4a, 0x15213c); grid.position.y = -0.02; scene.add(grid);
+
+// Land (extruded outline)
+const shape = new THREE.Shape(OUTLINE.map(([la, lo]) => { const p = proj(la, lo); return new THREE.Vector2(p.x, -p.y); }));
+const land = new THREE.Mesh(
+  new THREE.ExtrudeGeometry(shape, { depth:0.35, bevelEnabled:false }),
+  new THREE.MeshStandardMaterial({ color:0x24385e, roughness:.8 })
+);
+land.rotation.x = -Math.PI / 2; scene.add(land);
+const edge = new THREE.LineLoop(
+  new THREE.BufferGeometry().setFromPoints(OUTLINE.map(([la, lo]) => { const p = proj(la, lo); return new THREE.Vector3(p.x, 0.37, p.y); })),
+  new THREE.LineBasicMaterial({ color:0x4cc3ff })
+);
+scene.add(edge);
+
+const LAND_Y = 0.35;
+const at = (lat, lon, y = LAND_Y) => { const p = proj(lat, lon); return new THREE.Vector3(p.x, y, p.y); };
+
+/* ---------- Layers ---------- */
+const layers = {};
+function addLayer(key, label, color, group) { group.visible = true; layers[key] = { label, color, group }; scene.add(group); }
+const pickables = [];
+function label(text, pos) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+  const g = c.getContext('2d'); g.font = '600 26px system-ui'; g.fillStyle = '#e6edf7'; g.textAlign = 'center'; g.fillText(text, 128, 40);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:new THREE.CanvasTexture(c), transparent:true, depthTest:false }));
+  s.scale.set(5, 1.25, 1); s.position.copy(pos); return s;
+}
+
+// Landmarks
+{ const g = new THREE.Group();
+  for (const [n, la, lo] of LANDMARKS) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(.18, 12, 12), new THREE.MeshBasicMaterial({ color:0xffffff }));
+    m.position.copy(at(la, lo, LAND_Y + .2)); g.add(m);
+    g.add(label(n, at(la, lo, LAND_Y + 1.2)));
+  } addLayer('landmarks', 'Landmarks', '#ffffff', g); }
+
+// Hospitals
+{ const g = new THREE.Group();
+  for (const [n, la, lo] of HOSPITALS) {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(.25, .25, 1.2, 16), new THREE.MeshStandardMaterial({ color:0x4cc3ff, emissive:0x0a3a5a }));
+    m.position.copy(at(la, lo, LAND_Y + .6)); m.userData = { tip:n, kind:'hospital' }; g.add(m); pickables.push(m);
+  } addLayer('hospitals', 'Public hospitals', '#4cc3ff', g); }
+
+// Mithi river
+{ const g = new THREE.Group();
+  const curve = new THREE.CatmullRomCurve3(MITHI.map(([la, lo]) => at(la, lo, LAND_Y + .08)));
+  g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 48, .12, 8, false), new THREE.MeshBasicMaterial({ color:0x3aa0ff })));
+  g.add(label('Mithi River', at(19.1000, 72.8850, LAND_Y + 1)));
+  addLayer('river', 'Mithi river', '#3aa0ff', g); }
+
+// Flood hotspots (pulsing rings)
+const rings = [];
+{ const g = new THREE.Group();
+  for (const [n, la, lo] of FLOOD_SPOTS) {
+    const r = new THREE.Mesh(new THREE.RingGeometry(.35, .5, 32), new THREE.MeshBasicMaterial({ color:0xff4d4f, transparent:true, side:THREE.DoubleSide }));
+    r.rotation.x = -Math.PI / 2; r.position.copy(at(la, lo, LAND_Y + .05)); r.userData = { tip:'Flood hotspot: ' + n, kind:'flood' };
+    g.add(r); rings.push(r); pickables.push(r);
+  } addLayer('flood', 'Flood hotspots', '#ff4d4f', g); }
+
+// Projects (bar height = sanctioned amount)
+const projectGroup = new THREE.Group(); scene.add(projectGroup);
+const progressGroup = new THREE.Group(); scene.add(progressGroup);
+layers.projects = { label:'Civic projects', color:'#2ecc71', group:projectGroup };
+let projects = DEMO_PROJECTS, projectMeshes = [];
+
+function buildProjects(statusFilter = 'all') {
+  for (const grp of [projectGroup, progressGroup]) while (grp.children.length) { const c = grp.children.pop(); c.geometry?.dispose(); c.material?.dispose(); }
+  projectMeshes = [];
+  for (const p of projects) {
+    if (statusFilter !== 'all' && p.status !== statusFilter) continue;
+    const h = Math.max(.4, Math.sqrt(p.sanctioned_cr) * .35);
+    const col = STATUS_COLOR[p.status] ?? 0x999999;
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(.7, h, .7), new THREE.MeshStandardMaterial({ color:col, transparent:true, opacity:.35, emissive:col, emissiveIntensity:.25 }));
+    bar.position.copy(at(p.lat, p.lon, LAND_Y + h / 2)); bar.userData = { project:p }; projectGroup.add(bar); projectMeshes.push(bar);
+    // solid fill = paid share
+    const ph = Math.max(.02, h * Math.min(1, p.paid_cr / p.sanctioned_cr));
+    const fill = new THREE.Mesh(new THREE.BoxGeometry(.72, ph, .72), new THREE.MeshStandardMaterial({ color:col }));
+    fill.position.copy(at(p.lat, p.lon, LAND_Y + ph / 2)); fill.userData = { project:p }; projectGroup.add(fill); projectMeshes.push(fill);
+  }
+}
+buildProjects();
+
+/* ---------- HUD ---------- */
+const layersEl = document.getElementById('layers');
+for (const [k, L] of Object.entries(layers)) {
+  const lab = document.createElement('label');
+  lab.innerHTML = `<input type="checkbox" checked data-k="${k}"><span class="sw" style="background:${L.color}"></span>${L.label}`;
+  layersEl.appendChild(lab);
+}
+layersEl.addEventListener('change', e => { const k = e.target.dataset.k; if (k) layers[k].group.visible = e.target.checked; });
+document.getElementById('status').addEventListener('change', e => buildProjects(e.target.value));
+
+/* ---------- Interaction ---------- */
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+const tip = document.getElementById('tip'), info = document.getElementById('info'), body = document.getElementById('infobody');
+const fmt = n => '₹' + n.toFixed(1) + ' cr';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+function pick(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  mouse.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(mouse, camera);
+  const targets = [...(layers.projects.group.visible ? projectMeshes : []), ...pickables.filter(o => o.parent?.visible)];
+  return ray.intersectObjects(targets, false)[0]?.object ?? null;
+}
+renderer.domElement.addEventListener('pointermove', ev => {
+  const o = pick(ev);
+  if (o) { tip.style.display = 'block'; tip.style.left = ev.clientX + 12 + 'px'; tip.style.top = ev.clientY + 12 + 'px';
+           tip.textContent = o.userData.project ? o.userData.project.title : o.userData.tip; renderer.domElement.style.cursor = 'pointer'; }
+  else { tip.style.display = 'none'; renderer.domElement.style.cursor = 'grab'; }
+});
+let downAt = null;
+renderer.domElement.addEventListener('pointerdown', ev => { downAt = [ev.clientX, ev.clientY]; });
+renderer.domElement.addEventListener('pointerup', ev => {
+  if (!downAt || Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]) > 4) return; // ignore drags
+  const o = pick(ev); if (o?.userData.project) showProject(o.userData.project);
+});
+document.getElementById('close').onclick = () => { info.style.display = 'none'; };
+
+function showProject(p) {
+  const pct = Math.round(100 * p.paid_cr / p.sanctioned_cr);
+  const c = '#' + STATUS_COLOR[p.status].toString(16).padStart(6, '0');
+  body.innerHTML = `
+    <h2>${esc(p.title)}</h2>
+    <span class="tag" style="background:${c}">${esc(p.status)}</span>
+    <table>
+      <tr><td>Project ID</td><td>${esc(p.id)}</td></tr>
+      <tr><td>Department</td><td>${esc(p.dept)}</td></tr>
+      <tr><td>Ward</td><td>${esc(p.ward)}</td></tr>
+      <tr><td>Sanctioned</td><td>${fmt(p.sanctioned_cr)}</td></tr>
+      <tr><td>Paid so far</td><td>${fmt(p.paid_cr)} (${pct}%)<div class="bar"><i style="width:${pct}%"></i></div></td></tr>
+      <tr><td>Due date</td><td>${esc(p.due)}</td></tr>
+    </table>
+    ${p.flags?.length ? `<ul class="flags">${p.flags.map(f => `<li>${esc(f)}</li>`).join('')}</ul>
+      <div style="color:var(--mute);font-size:12px;margin-top:6px">Flags are risk indicators for review, not findings of wrongdoing.</div>` : ''}
+    <div style="color:var(--mute);font-size:12px;margin-top:8px">Source: ${esc(p.source || 'demo data (synthetic)')}</div>`;
+  info.style.display = 'block';
+  controls.target.lerp(at(p.lat, p.lon, 0), .6);
+}
+
+/* ---------- Optional real data ---------- */
+fetch('data/projects.json').then(r => r.ok ? r.json() : null).then(j => {
+  if (Array.isArray(j) && j.length) { projects = j; buildProjects(document.getElementById('status').value); }
+}).catch(() => {});
+
+/* ---------- Loop ---------- */
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const t = clock.getElapsedTime();
+  rings.forEach((r, i) => { const k = (t * .6 + i * .2) % 1; r.scale.setScalar(1 + k * 2.2); r.material.opacity = 1 - k; });
+  controls.update(); renderer.render(scene, camera);
+});
+window.__twinReady = true;
+</script>
+<script>
+  // Show a friendly message if the module graph failed to load.
+  setTimeout(() => { if (!window.__twinReady) document.getElementById('err').style.display = 'flex'; }, 8000);
+</script>
+</body>
+</html>
