@@ -7,6 +7,9 @@ Prototype tools for **Claude Impact Lab Mumbai: Civic Budget & Accountability**.
 | Idea catalogue for the challenge | [`IDEAS.md`](IDEAS.md) |
 | Tender-based expense monitoring ideas, data sources, method | [`docs/EXPENSE_MONITORING.md`](docs/EXPENSE_MONITORING.md) |
 | Website (GitHub Pages): analytics for Mumbai and MMR, 3D digital twin | [`docs/`](docs/) |
+| Advanced solution stack (design, status, evaluation plan, limits) | [`docs/ADVANCED.md`](docs/ADVANCED.md) |
+| Risk engine (browser and Node) | [`docs/assets/engine.js`](docs/assets/engine.js) |
+| Claude PDF-extraction pipeline (strict schema, validation) | [`pipeline/extract_tender.py`](pipeline/extract_tender.py) |
 | Synthetic sample-data generator | [`scripts/generate_sample_data.py`](scripts/generate_sample_data.py) |
 
 ## Website
@@ -17,7 +20,20 @@ The site is static (no build step) and lives in `docs/`.
 cd docs && python3 -m http.server 8000
 ```
 
-Open `http://localhost:8000`. Pages: `index.html`, `analytics.html`, `twin/`.
+Open `http://localhost:8000`. Pages: `index.html`, `analytics.html`, `radar.html` (risk scoring), `rti.html` (RTI and appeal drafts), `twin/`.
+
+### Tests
+
+```bash
+node --test tests/engine.test.cjs
+python3 -m unittest tests/test_extract_validate.py
+```
+
+The risk-engine tests show the detectors find *planted* patterns in synthetic data. They say nothing about accuracy on real procurement data (see `docs/ADVANCED.md`, section 7).
+
+### Extraction pipeline
+
+`pipeline/extract_tender.py` sends tender PDFs to Claude with a strict JSON schema and re-validates the output locally. Its validator is unit-tested, but the model call has **not been run against the live API** yet. Needs `pip install anthropic` and an API key.
 
 ### Data honesty
 

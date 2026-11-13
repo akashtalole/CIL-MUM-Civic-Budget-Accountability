@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tender Risk Radar</title>
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .score{display:inline-block;min-width:34px;text-align:center;font-weight:700;border-radius:6px;padding:1px 6px;color:#0b1220}
+  .high{background:var(--bad)}.medium{background:var(--warn)}.low{background:var(--ok)}
+  tr.row{cursor:pointer}tr.row:hover td{background:#16213a}
+  .why{background:#0d1527}.why td{padding:10px 14px}
+  .rs{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;font-size:13px;margin:4px 0}
+  .rs .bar{height:8px;background:#1d2a4a;border-radius:4px;align-self:center}.rs .bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+  .cav{color:var(--mute);font-size:12px}
+  #net{width:100%;height:420px;background:#0d1527;border-radius:10px}
+  #net text{fill:#e6edf7;font-size:11px}
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <strong>Mumbai &amp; MMR Civic Spend Monitor</strong>
+  <nav><a href="index.html">Home</a><a href="analytics.html">Analytics</a><a href="radar.html" aria-current="page">Risk Radar</a><a href="rti.html">RTI Copilot</a><a href="twin/">3D Digital Twin</a><a href="https://github.com/akashtalole/CIL-MUM-Civic-Budget-Accountability">GitHub</a></nav>
+</div></header>
+<main class="wrap">
+  <h1>Tender Risk Radar</h1>
+  <p class="lead">Explainable screens that rank tenders for human review: single bidders, near-estimate awards, tight bid spreads, repeated extensions, frequent co-bidders, possible contract splitting and monsoon timing. Click any row to see why it scored as it did, and the innocent explanations for each signal.</p>
+  <div class="banner" id="synBanner"><b>Synthetic data.</b> The tenders, contractors and patterns here are generated, including deliberately planted collusion and splitting patterns used to test the detectors. The page shows the method works on known patterns, and says nothing about any real tender or firm.</div>
+  <div class="banner real">A score is a <b>triage aid, not evidence</b>. It points reviewers to documents worth requesting (see <a href="rti.html">RTI Copilot</a>), and never alleges wrongdoing.</div>
+
+  <div class="controls">
+    <label>Organisation <select id="fOrg"></select></label>
+    <label>Level <select id="fLevel"><option value="all">All</option><option value="high">High</option><option value="medium">Medium and above</option></select></label>
+    <label>Splitting threshold (₹ cr) <input id="thr" type="number" value="3" min="0.5" step="0.5" style="width:80px"></label>
+  </div>
+  <div class="grid kpis" id="kpis"></div>
+
+  <h2>Top-ranked tenders</h2>
+  <div class="card scroll"><table id="tRank"></table></div>
+
+  <div class="grid cols-2" style="margin-top:14px">
+    <div class="card"><h3>Co-bidding network</h3><p>Red edges: firms that bid together far more than independence predicts (z ≥ 5, lift ≥ 1.8, ≥ 4 shared tenders). Hover an edge for the numbers.</p><svg id="net" viewBox="0 0 600 420"></svg></div>
+    <div class="card"><h3>Benford first-digit test on awarded values</h3><p id="benTxt"></p><div class="chart"><canvas id="cBen"></canvas></div></div>
+  </div>
+
+  <h2>Possible contract-splitting clusters</h2>
+  <div class="card scroll"><table id="tSplit"></table></div>
+
+  <h2>How the score works</h2>
+  <div class="card scroll"><table id="tW"></table></div>
+</main>
+<footer><div class="wrap">Independent civic-transparency prototype. Not an official BMC, MMRDA or Government of Maharashtra service.</div></footer>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/radar.js"></script>
+</body>
+</html>

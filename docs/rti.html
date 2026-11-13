@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RTI &amp; Escalation Copilot</title>
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  textarea{width:100%;min-height:420px;background:#0b1220;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+  label.f{display:block;font-size:13px;color:var(--mute);margin:8px 0 2px}
+  input[type=text],input[type=date]{width:100%}
+  .tabs{display:flex;gap:8px;margin:10px 0}.tabs button.on{border-color:var(--accent);color:var(--accent)}
+  ol.ladder{padding-left:18px;margin:6px 0}ol.ladder li{margin:2px 0}
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <strong>Mumbai &amp; MMR Civic Spend Monitor</strong>
+  <nav><a href="index.html">Home</a><a href="analytics.html">Analytics</a><a href="radar.html">Risk Radar</a><a href="rti.html" aria-current="page">RTI Copilot</a><a href="twin/">3D Digital Twin</a><a href="https://github.com/akashtalole/CIL-MUM-Civic-Budget-Accountability">GitHub</a></nav>
+</div></header>
+<main class="wrap">
+  <h1>RTI &amp; Escalation Copilot</h1>
+  <p class="lead">Turns a flagged tender into a precise, file-ready RTI application, then tracks the statutory deadlines and drafts the first appeal. Everything runs in your browser. Nothing you type is sent anywhere.</p>
+  <div class="banner" id="synBanner"><b>Sample tenders.</b> The tender IDs here are synthetic. The drafting logic works the same on real tender records.</div>
+  <div class="banner real"><b>Review before filing.</b> These are drafts to help citizens ask specific questions. Check the authority, the fee and the current rules for your state or body, and consider legal advice for contested cases. This is not legal advice.</div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h3>1. Choose the tender</h3>
+      <label class="f">Tender (highest-risk first)</label><select id="tender" style="width:100%"></select>
+      <div id="why" class="cav" style="margin-top:6px"></div>
+      <h3 style="margin-top:14px">2. Your details</h3>
+      <label class="f">Name</label><input type="text" id="aName" placeholder="Your full name">
+      <label class="f">Postal address</label><input type="text" id="aAddr" placeholder="Address for reply">
+      <label class="f">Date of filing</label><input type="date" id="aDate">
+      <label class="f">Public authority / department (as on the tender)</label><input type="text" id="aAuth" placeholder="e.g. Ward office, Storm Water Drains department">
+      <h3 style="margin-top:14px">Deadlines</h3>
+      <div id="dl"></div>
+    </div>
+    <div class="card">
+      <div class="tabs"><button id="bRti" class="on">RTI application</button><button id="bApp">First appeal</button></div>
+      <textarea id="out" spellcheck="false"></textarea>
+      <div class="controls"><button id="copy">Copy text</button><span id="copied" class="cav"></span></div>
+    </div>
+  </div>
+
+  <h2>Escalation ladder (complaints and non-response)</h2>
+  <div class="grid cols-2">
+    <div class="card"><h3>Typical BMC chain</h3><ol class="ladder"><li>Ward engineer / department head</li><li>Assistant Municipal Commissioner of the ward</li><li>Deputy Municipal Commissioner (zone)</li><li>Additional Municipal Commissioner</li><li>Municipal Commissioner</li></ol><p class="cav">Typical order only. Confirm the current structure and contacts on the authority's website. Other bodies (MMRDA, other municipal corporations) differ.</p></div>
+    <div class="card"><h3>RTI route</h3><ol class="ladder"><li>RTI application to the Public Information Officer (PIO)</li><li>First appeal to the First Appellate Authority</li><li>Second appeal to the State Information Commission</li></ol><p class="cav">Also consider the authority's grievance channels and the elected ward representative in parallel. Keep copies and proof of posting or filing of everything.</p></div>
+  </div>
+</main>
+<footer><div class="wrap">Independent civic-transparency prototype. Not an official service and not legal advice.</div></footer>
+<script src="assets/engine.js"></script>
+<script src="assets/rti.js"></script>
+</body>
+</html>

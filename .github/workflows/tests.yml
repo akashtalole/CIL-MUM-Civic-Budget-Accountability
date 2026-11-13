@@ -1,0 +1,28 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Risk engine tests
+        run: node --test tests/engine.test.cjs
+      - name: Extraction validator tests
+        run: python3 -m unittest tests/test_extract_validate.py
+      - name: Sample data is reproducible
+        run: |
+          python3 scripts/generate_sample_data.py
+          git diff --exit-code docs/data/tenders.sample.json
